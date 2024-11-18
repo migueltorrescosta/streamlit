@@ -10,8 +10,6 @@ st.header("Miguel's dashboard", divider="blue")
 
 quicklinks = {
     "🌊️ Collapsed Wave": "https://collapsedwave.com",
-    "⭕️ MAWI": "https://mawi-net.eu/",
-    "🥷️ Missione": "https://units.u-web.cineca.it/appautmis/listaautmis",
 }
 
 columns = st.columns(len(quicklinks))
