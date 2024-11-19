@@ -1,3 +1,5 @@
+from enum import Enum
+
 from matplotlib import pyplot as plt
 from src.plotting import plot_array
 from tqdm import tqdm
@@ -11,16 +13,16 @@ import streamlit as st
 # LAYOUT
 st.set_page_config(page_title="Fisher information", page_icon="🛗️", layout="wide")
 
-
-distributions = ["binomial"]
+class Distributions(Enum):
+    Binomial = "Binomial"
 
 # INPUTS
 with st.sidebar:
     st.header("Fisher Information", divider="blue")
-    distribution = st.selectbox("Function", distributions)
+    distribution = st.selectbox("Function", [dist.value for dist in Distributions])
 
     match distribution:
-        case "binomial":
+        case Distributions.Binomial.value:
             c1, c2 = st.columns(2)
             with c1:
                 n = st.number_input("$N$ Trials", min_value=1, value=3)
@@ -38,9 +40,9 @@ with st.sidebar:
 st.header("Fisher Information", divider="blue")
 
 match distribution:
-    case "binomial":
+    case Distributions.Binomial.value:
         st.latex(f"""
-            f_\\theta(x) = \\mathbb{{P}}[X=x] = {{{n} \\choose x}} x^{{\\theta}}({n}-x)^{{1 - \\theta}}, x \\in \{{ 0 , 1 , \\dots , {n} \}} 
+            f_\\theta(x) = \\mathbb{{P}}[X=x] = {{{n} \\choose x}} x^{{\\theta}}({n}-x)^{{1 - \\theta}}, x \\in \\{{ 0 , 1 , \\dots , {n} \\}} 
         """)
 
 df_pdf = pd.DataFrame(

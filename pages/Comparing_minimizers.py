@@ -18,7 +18,7 @@ test_functions = {
     "Ackley": lambda x,y: -20*np.exp(-.2 * np.sqrt(.5 * (x**2 + y**2))),
     "Sphere": lambda x,y: x**2 + y**2,
     "Rosenbrock": lambda x,y: np.log(1 + (1-x)**2 + 100*(y-x**2)**2), # Logged Rosenbrock
-    "Beale": lambda x,y: 2,
+    "Beale": lambda x,y: np.log((1.5-x+x*y)**2 + (2.25-x+x*y**2)**2 + (2.625-x+x*y**3)**2), # Logged Beale
     "Goldstein-Price": lambda x,y: (1+(x+y+1)**2*(19-14*x+3*x**2-14*y + 6*x*y +3*y**2))*(30+(2*x - 3*y)**2*(18-32*x+12*x**2+48*y-36*x*y+27*y**2)),
     "Booth": lambda x,y: (x+2*y-7)**2 + (2*x+y-5)**2,
     "Bukin": lambda x,y: 100*np.sqrt(np.abs(y-.01*x**2)) + .01 * np.abs(x+10),
@@ -54,7 +54,26 @@ minimizers = {
 } # https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
 
 
-@st.cache_data
+with st.sidebar:
+    st.header("Comparing minimizers", divider="blue")
+    c1, c2 = st.columns(2)
+    with c1:
+        selected_optimizer = st.selectbox("Minimizer", list(minimizers.keys()))
+        optimizer = minimizers[selected_optimizer]
+    with c2:
+        selected_function = st.selectbox("Test function", list(test_functions.keys()))
+        function = test_functions[selected_function]
+
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        x_min = st.number_input("$x_{min}$", value=-3.)
+    with c2:
+        x_max = st.number_input("$x_{max}$", min_value=x_min, value=3.)
+    with c3:
+        y_min = st.number_input("$y_{min}$", value=-3.)
+    with c4:
+        y_max = st.number_input("$y_{max}$", min_value=y_min, value=3.)
+
 def gen_surface_df(f: str) -> pd.DataFrame:
     return pd.DataFrame([
         {"x": round(x, 3), "y": round(y, 3), "f": test_functions[f](x, y)}
@@ -62,7 +81,6 @@ def gen_surface_df(f: str) -> pd.DataFrame:
         in itertools.product(np.linspace(-3, 3, 501), repeat=2)
     ])
 
-@st.cache_data
 def gen_performance_df() -> pd.DataFrame:
     df = pd.DataFrame([
         {
@@ -81,38 +99,24 @@ def gen_performance_df() -> pd.DataFrame:
 
 st.header("Comparing minimizers", divider="blue")
 
-with st.sidebar:
-    st.header("Comparing minimizers", divider="blue")
-    c1, c2 = st.columns(2)
-    with c1:
-        selected_optimizer = st.selectbox("Minimizer", list(minimizers.keys()))
-        optimizer = minimizers[selected_optimizer]
-    with c2:
-        selected_function = st.selectbox("Test function", list(test_functions.keys()))
-        function = test_functions[selected_function]
+c1, c2 = st.columns(2)
+with c1:
+    argmin_df = gen_performance_df()
+    fig, ax = plt.subplots()
+    sns.heatmap(
+        argmin_df.pivot(index="test_function", columns="minimizer", values="normalized_min"),
+        ax=ax,
+        cmap="viridis",
+    )
+    st.write(fig)
+    st.caption("Yellow is BAD")
 
-
-
-st.subheader("Performance comparison")
-argmin_df = gen_performance_df()
-fig, ax = plt.subplots()
-sns.heatmap(
-    argmin_df.pivot(index="test_function", columns="minimizer", values="normalized_min"),
-    ax=ax,
-    cmap="viridis"
-)
-st.write(fig)
-st.caption("Yellow is BAD")
-
-columns = st.tabs(test_functions.keys())
-for index, function in tqdm(enumerate(test_functions.keys()), total = len(test_functions)):
-    with columns[index]:
-        # st.caption(f"{function} test function")
-        surface_df = gen_surface_df(f=function)
-        fig, ax = plt.subplots()
-        sns.heatmap(
-            surface_df.pivot(index="x", columns="y", values="f"),
-            cmap="viridis"
-        )
-        st.write(fig)
+with c2:
+    surface_df = gen_surface_df(f=selected_function)
+    fig, ax = plt.subplots()
+    sns.heatmap(
+        surface_df.pivot(index="x", columns="y", values="f"),
+        cmap="viridis"
+    )
+    st.write(fig)
 
