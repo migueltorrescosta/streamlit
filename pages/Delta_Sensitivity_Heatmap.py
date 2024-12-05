@@ -8,6 +8,7 @@ import streamlit as st
 
 cpus = multiprocessing.cpu_count()
 
+st.set_page_config(page_title="Delta Sensitivity Heatmap", page_icon="📈️", layout="wide")
 
 # SENSITIVITY CALCULATION
 def sensitivity(
@@ -19,8 +20,8 @@ def sensitivity(
         alpha_z: float,  # sigma_z_coupling_coefficient
         t: float  # time
 ):
-    # Returns the sensitivity wrt the tunneling strengh and wrt the energy shift of the system for a given level |k>
-    assert k <= n, "The level k must be smaller than the ancilliary dimention n"
+    # Returns the sensitivity wrt the tunneling strength and wrt the energy shift of the system for a given level |k>
+    assert k <= n, "The level k must be smaller than the ancilliary dimension n"
     assert k >= 0, "The level k must be greater than or equal to 0"
 
     x_coefficient = alpha_x * np.divide(n - 2 * k, 2) - j_s
@@ -106,11 +107,11 @@ sensitivity_df = pd.DataFrame(
 )
 
 
-def plot_sensitivity(sensitivity_df, title: str, values: str):
+def plot_sensitivity(df, title: str, values: str):
     fig, ax = plt.subplots()
     ax.set_title(title)
     sns.heatmap(
-        sensitivity_df.pivot(index="alpha_x", columns="alpha_z", values=values),
+        df.pivot(index="alpha_x", columns="alpha_z", values=values),
         ax=ax,
         vmin=-1,
         vmax=1,

@@ -1,47 +1,46 @@
 from dataclasses import dataclass
-from enum import Enum
 from plotly import express as px
-from tqdm import tqdm
 from typing import Callable, List
 import numpy as np
 import pandas as pd
 import scipy
 import streamlit as st
 
+from src.enums import WavePacket, PotentialFunction, BoundaryCondition
 from src.plotting import plot_array
 
-st.set_page_config(page_title="1D Quantum Time Evolution", page_icon="🦖️", layout="wide")
+st.set_page_config(page_title="Numerical Quantum Time Evolution", page_icon="🦖️", layout="wide")
 
 st.cache_data.clear()
 st.cache_resource.clear()
 
-
-class WavePacket(Enum):
-    Gaussian = "Gaussian"
-    Step = "Step"
-    # Airy = "Airy"
-    # Morse = "Morse"
-    # Solitary = "Solitary"
-
-
-class PotentialFunction(Enum):
-    DoubleWell = "Double-well"
-    Quadratic = "Quadratic"
-    Quartic = "Quartic"
-    Trigonometric = "Trigonometric"
-    Uniform = "Uniform"
-
-
-class BoundaryCondition(Enum):
-    Cyclic = "Cyclic"
-    Dirichlet = "Dirichlet"
-
-
 # START
 with st.sidebar:
+
+
+    st.header("Setup", divider="blue")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        x_min = st.number_input("$x_{min}$", value=-3.)
+    with c2:
+        x_max = st.number_input("$x_{max}$", value=3.)
+    with c3:
+        number_of_spatial_points = st.number_input("$N_x$", value=1000)
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        number_of_energy_levels = st.number_input("$E_{levels}$", min_value=2, value=20)
+    with c2:
+        time = st.number_input("$t$", min_value=.00001, value=10.)
+    with c3:
+        trotterization_steps = st.number_input("$N_t$", min_value=5, value=500)
+
+    assert x_min < x_max, f"We need x_min < x_max"
+
+    valid_x = np.linspace(x_min, x_max, number_of_spatial_points)
+
     c1, c2 = st.columns(2)
     with c1:
-        st.header("Initial state $\\ket{\\psi_0}$", divider="blue")
+        st.header("Initial state $\\ket{\\psi_0}$", divider="orange")
         initial_wave_packet: WavePacket = st.selectbox("$\\psi_0(x)$", [psi.value for psi in WavePacket])
         match initial_wave_packet:
             case WavePacket.Gaussian.value:
@@ -57,8 +56,11 @@ with st.sidebar:
                 momentum = st.number_input("$p$", value=5.)
                 phi_zero_x = lambda x: np.exp(1j * momentum * x) * (x >= r) * (x <= s)
 
+        phi_zero = np.array([phi_zero_x(x) for x in valid_x])
+        phi_zero /= np.sqrt(np.sum(np.abs(phi_zero) ** 2))
+
     with c2:
-        st.header("Potential $V(x)$", divider="orange")
+        st.header("Potential $V(x)$", divider="green")
         potential_function: PotentialFunction = st.selectbox("$V(x)$", [f.value for f in PotentialFunction])
         match potential_function:
 
@@ -78,12 +80,12 @@ with st.sidebar:
                 st.latex("a\\cos(\\phi + fx)")
                 amplitude = st.number_input("$a$", min_value=.0, value=1.)
                 phase = st.number_input("$\\phi$", value=0.0)
-                frequency = st.number_input("$f$", min_value=.0, value=3.)
+                frequency = st.number_input("$f$", min_value=.0, value=np.divide(x_max-x_min, np.pi))
                 potential_x = lambda x: amplitude * np.cos(phase + frequency * x)
 
             case PotentialFunction.Uniform.value:
                 st.latex("ax")
-                a = st.number_input("$a$", min_value=.0, value=1.)
+                a = st.number_input("$a$", value=1.)
                 potential_x = lambda x: a * x
 
             case PotentialFunction.DoubleWell.value:
@@ -95,29 +97,8 @@ with st.sidebar:
 
         boundary_condition: BoundaryCondition = st.selectbox("Boundary Condition", [f.value for f in BoundaryCondition])
 
-    st.header("Evolution", divider="green")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        x_min = st.number_input("$x_{min}$", value=-3.)
-    with c2:
-        x_max = st.number_input("$x_{max}$", value=3.)
-    with c3:
-        number_of_spatial_points = st.number_input("$N_x$", value=1000)
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        number_of_energy_levels = st.number_input("$E_{levels}$", min_value=2, value=20)
-    with c2:
-        time = st.number_input("$t$", min_value=.00001, value=10.)
-    with c3:
-        trotterization_steps = st.number_input("$N_t$", min_value=5, value=100)
+st.header("Setup", divider="blue")
 
-    assert x_min < x_max, f"We need x_min < x_max"
-
-    valid_x = np.linspace(x_min, x_max, number_of_spatial_points)
-    phi_zero = np.array([phi_zero_x(x) for x in valid_x])
-    phi_zero /= np.sqrt(np.sum(np.abs(phi_zero) ** 2))
-
-# ["Wave", ]
 methodology_info = {
     "Methodology": "These tabs describe the methodology used",
     "Wave": f"""
@@ -127,7 +108,7 @@ methodology_info = {
         We choose a {potential_function} potential with {boundary_condition} boundary.
     """,
     "Hamiltonian": f"""
-        We calculate the Hamiltonian using the tri-diagonal representation of $H=\\frac{{\hat{{P}}^2}}{{2m}} + V(x)$,
+        We calculate the Hamiltonian using the tri-diagonal representation of $H=\\frac{{\\hat{{P}}^2}}{{2m}} + V(x)$,
         with ${number_of_spatial_points}$ spatial points,
         i.e. using a ${number_of_spatial_points} \\times {number_of_spatial_points}$ array.
     """,
@@ -150,7 +131,7 @@ for tab, content in zip(tabs, methodology_info.keys()):
 
 c1, c2, c3 = st.columns([5, 1, 5])
 with c1:
-    st.header("Initial state $\\ket{\\psi_0}$", divider="blue")
+    st.header("Initial state $\\ket{\\psi_0}$", divider="orange")
     st.line_chart(
         pd.DataFrame({
             "Re": np.real(phi_zero),
@@ -199,7 +180,7 @@ hamiltonian = build_1d_hamiltonian(
 eigenvalues, eigenvectors = scipy.sparse.linalg.eigs(hamiltonian, k=number_of_energy_levels, which="SM")
 
 with c3:
-    st.header("Potential $V(x)$", divider="orange")
+    st.header("Potential $V(x)$", divider="green")
     st.line_chart(
         pd.DataFrame({
             "Potential": map(potential_x, valid_x),
@@ -291,7 +272,7 @@ with c2:
     ]) + "\\end{array}$"
                )
 
-st.header("Evolution", divider="green")
+st.header("Evolution", divider="red")
 
 
 def evolve(t: float) -> np.array:

@@ -86,7 +86,7 @@ fisher_information_df = pd.DataFrame({
     "theta": valid_theta
 })
 st.header("Cramer Rao", divider="orange")
-fisher_information_df.T # TODO: Understand why increasing the size of N impacts the number of Nones in this pd.DataFrame
+st.dataframe(fisher_information_df.T) # TODO: Understand why increasing the size of N impacts the number of Nones in this pd.DataFrame
 c1, c2 = st.columns(2)
 with c1:
     st.latex("""

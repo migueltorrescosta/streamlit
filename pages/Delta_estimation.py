@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from plotly import express as px
 from src.angular_momentum import generate_spin_matrices
 from src.plotting import plot_array
 from tqdm import tqdm
@@ -14,7 +13,7 @@ import streamlit as st
 tqdm.pandas()
 
 # LAYOUT
-st.set_page_config(page_title="Estimate delta", page_icon="🛗️", layout="wide")
+st.set_page_config(page_title="Delta Optimization", page_icon="📈️", layout="wide")
 
 # INPUTS
 with st.sidebar:
@@ -23,36 +22,36 @@ with st.sidebar:
     st.subheader("System controls")
     c1, c2 = st.columns(2)
     with c1:
-        j_s = st.number_input("$J_S$", value=1.)
+        j_s = st.number_input("$J_S$", value=-5.2515, step=.0001)
     with c2:
-        delta_s = st.number_input("$\\delta_S$", value=1.)
+        delta_s = st.number_input("$\\delta_S$", value=3., step=.0001)
 
     st.subheader("Ancillary setup")
     c1, c2 = st.columns(2)
     with c1:
-        dim_a = st.number_input("$N$ ( Ancillary dim )", 0, 20, 2)
+        dim_a = st.number_input("$N$ ( Ancillary dim )", min_value=0, value=5, max_value=100)
     with c2:
-        k = st.number_input("$\\ket{k}$", 0, dim_a - 1, 0)
+        k = st.number_input("$\\ket{k}$", min_value=0, value=0, max_value=dim_a - 1)
 
     st.subheader("Ancillary controls")
     c1, c2, c3 = st.columns(3)
     with c1:
-        j_a = st.number_input("$J_A$", value=0.)
+        j_a = st.number_input("$J_A$", value=0.27688, step=.0001)
     with c2:
-        u_a = st.number_input("$U_A$", value=0.)
+        u_a = st.number_input("$U_A$", value=3.9666, step=.0001)
     with c3:
-        delta_a = st.number_input("$\\delta_A$", value=0.)
+        delta_a = st.number_input("$\\delta_A$", value=-3.8515472, step=.0001)
 
     st.subheader("Interaction controls")
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        alpha_xx = st.number_input(r"$\alpha_{xx}$", value=0.)
+        alpha_xx = st.number_input(r"$\alpha_{xx}$", value=0.501046930, step=.0001)
     with c2:
-        alpha_xz = st.number_input(r"$\alpha_{xz}$", value=0.)
+        alpha_xz = st.number_input(r"$\alpha_{xz}$", value=-0.843229248, step=.0001)
     with c3:
-        alpha_zx = st.number_input(r"$\alpha_{zx}$", value=0.)
+        alpha_zx = st.number_input(r"$\alpha_{zx}$", value=-1.66364957, step=.0001)
     with c4:
-        alpha_zz = st.number_input(r"$\alpha_{zz}$", value=0.)
+        alpha_zz = st.number_input(r"$\alpha_{zz}$", value=-3.09656175, step=.0001)
 
 # Assumptions
 # 1. dim_S = 2
@@ -235,11 +234,11 @@ with st.sidebar:
     st.header(r"""Estimating $\delta_S$""", divider="orange")
     c1, c2, c3 = st.columns(3)
     with c1:
-        time = st.number_input("$t$", min_value=0., value=5.)
+        time = st.number_input("$t$", min_value=0., value=9.580, step=.0001)
     with c2:
-        guessed_delta_s = st.number_input("$\\hat{\\delta}_s$", value=delta_s)
+        guessed_delta_s = st.number_input("$\\hat{\\delta}_s$", value=delta_s, step=.0001)
     with c3:
-        delta_s_var = st.number_input("$\\Delta \\delta_s$", min_value=0.01, value=1.)
+        delta_s_var = st.number_input("$\\Delta \\delta_s$", min_value=0.01, value=1., step=.0001)
 
 true_probability = float(np.array(df[df["time"] == time]["<1|rho_system_t|1>"])[0])
 
@@ -292,7 +291,7 @@ with st.sidebar:
     with c1:
         n_trials = st.number_input("$N_{trials}$", value=50)
     with c2:
-        confidence_interval = st.number_input("Confidence", value=.9, min_value=0.0001, max_value=.9999)
+        confidence_interval = st.number_input("Confidence", value=.9, min_value=0.0001, max_value=.9999, step=.0001)
         confidence_interval_multiplier = scipy.stats.norm.interval(confidence_interval)[1]
     if n_trials>500:
         st.error(f"Since $N_{{trials}} = {n_trials} \\geq 500$, this will be slooow ⚠️")
@@ -356,6 +355,7 @@ data = {
     "confidence_interval_multiplier": confidence_interval_multiplier,
     "estimated_delta_mean": estimated_delta_mean,
     "estimated_delta_var": estimated_delta_var,
+    "log_2_estimated_delta_var": np.log2(estimated_delta_var),
 }
 
 with st.sidebar:
@@ -393,3 +393,4 @@ with c2:
 # st.plotly_chart(fig)
 
 # NEXT: Plot the variance of our likelihood as a function of the Number of trials n_trials
+

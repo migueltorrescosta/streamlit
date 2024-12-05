@@ -1,13 +1,12 @@
 from matplotlib import pyplot as plt
 from scipy.optimize import minimize
-from tqdm import tqdm
 import itertools
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import streamlit as st
 
-st.set_page_config(page_title="Comparing Minimzers", page_icon="📐️", layout="wide")
+st.set_page_config(page_title="Minimize Heatmap", page_icon="📐️", layout="wide")
 
 # 1. Use the functions in https://en.wikipedia.org/wiki/Test_functions_for_optimization
 # 2. Add Nelder-Mead, Simulated Annealing, Q-learning?
@@ -62,7 +61,7 @@ with st.sidebar:
         optimizer = minimizers[selected_optimizer]
     with c2:
         selected_function = st.selectbox("Test function", list(test_functions.keys()))
-        function = test_functions[selected_function]
+        test_function = test_functions[selected_function]
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:

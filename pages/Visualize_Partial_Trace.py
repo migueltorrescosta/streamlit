@@ -1,5 +1,6 @@
 import functools
 import numpy as np
+import scipy.linalg
 import streamlit as st
 from src.angular_momentum import generate_spin_matrices
 from src.plotting import plot_array
@@ -42,6 +43,9 @@ with st.sidebar:
     with c4:
         alpha_zz = st.number_input("$\\alpha_{zz}$", value=0.)
 
+    st.subheader("Evolution", divider="red")
+    time = st.number_input("Time", min_value=0., value=1.)
+
 jxa, jza = generate_spin_matrices(n_a)
 jxb, jzb = generate_spin_matrices(n_b)
 
@@ -64,6 +68,13 @@ full_hamiltonian = functools.reduce(lambda x, y: x + y, [
 traced_a = np.trace(np.array(full_hamiltonian).reshape(n_a, n_b, n_a, n_b), axis1=1, axis2=3)
 traced_b = np.trace(np.array(full_hamiltonian).reshape(n_a, n_b, n_a, n_b), axis1=0, axis2=2)
 
+phi_zero = np.zeros(n_a * n_b)
+phi_zero[0] = 1 # state 0_A 0_B
+
+evolved_state = phi_zero @ scipy.linalg.expm(-1j *time*full_hamiltonian)
+traced_evolved_state_a = np.trace(np.array(np.outer(evolved_state, evolved_state)).reshape(n_a, n_b, n_a, n_b), axis1=1, axis2=3)
+traced_evolved_state_b = np.trace(np.array(np.outer(evolved_state, evolved_state)).reshape(n_a, n_b, n_a, n_b), axis1=0, axis2=2)
+
 st.latex(f"""
     \\begin{{array}}{{ccccc}}
     &&H&& \\\\
@@ -80,19 +91,28 @@ st.latex(f"""
 
 c1, c2, c3 = st.columns(3)
 with c1:
+    st.header("System A", divider="blue")
     st.latex("H_A")
     plot_array(hamiltonian_a, key="H_A")
     st.latex("\\mathrm{Tr}_B[H]")
     plot_array(traced_a, key="TrH_B")
+    st.latex("\\mathrm{Tr}_B[\\ket{\\psi_t}]")
+    plot_array(np.abs(traced_evolved_state_a)**2, midpoint=None, key="Tr_Bphi_t")
 
 with c2:
+    st.header("Interactions", divider="green")
     st.latex("H_{int}")
     plot_array(interaction_hamiltonian, key="H_int")
     st.latex("H")
     plot_array(full_hamiltonian, key="H")
+    st.latex("\\ket{\\psi_t} := e^{-itH} \\ket{0}_A \\ket{0}_B")
+    plot_array(np.abs(np.outer(evolved_state, evolved_state))**2, midpoint=None, key="phi_t")
 
 with c3:
+    st.header("System B", divider="orange")
     st.latex("H_B")
     plot_array(hamiltonian_b, key="H_B")
     st.latex("\\mathrm{Tr}_A[H]")
     plot_array(traced_b, key="TrH_A")
+    st.latex("\\mathrm{Tr}_A[\\ket{\\psi_t}]")
+    plot_array(np.abs(traced_evolved_state_b)**2, midpoint=None, key="Tr_Aphi_t")
