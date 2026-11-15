@@ -1,12 +1,8 @@
-import itertools
 import matplotlib.pyplot as plt
-import multiprocessing
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import streamlit as st
-
-cpus = multiprocessing.cpu_count()
 
 st.set_page_config(page_title="Delta Sensitivity Heatmap", page_icon="📈️", layout="wide")
 
@@ -64,8 +60,6 @@ st.latex(r"""\mathrm{Tr}[\rho_t^{(S)}\sigma_z] =
 
 sensitivity_column_1, sensitivity_column_2 = st.columns(2)
 
-variables_of_interest = ["j_s", "delta_s", "alpha_x", "alpha_z", "t"]
-
 # CONTROLS
 with st.sidebar:
     st.subheader("System", divider="blue")
@@ -83,28 +77,12 @@ with st.sidebar:
         k = st.number_input("$k$ ( initial state )", 0, n, 1)
 
     st.subheader("Interactions", divider="green")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        alpha_x = st.number_input("$\\alpha_x$", 0., 10., 1.)
-    with c2:
-        alpha_z = st.number_input("$\\alpha_z$", 0., 10., 1.)
-    with c3:
-        t = st.number_input("$t$", 0., 20., 3.)
+    t = st.number_input("$t$", 0., 20., 3.)
 
 # DATAFRAME CREATION
 resolution = [round(v, 3) for v in np.linspace(-5, 5, 500 + 1)]
-generator = itertools.product(resolution, repeat=2)
-star_generator = [
-    (n, k, j_s, delta_s, alpha_x, alpha_z, t)
-    for (alpha_x, alpha_z)
-    in itertools.product(resolution, repeat=2)
-]
-pool = multiprocessing.Pool(processes=cpus)
-pool.starmap(sensitivity, star_generator)  # Parallelizes the data generation
-sensitivity_df = pd.DataFrame(
-    data=pool.starmap(sensitivity, star_generator),
-    columns=["n", "k", "j_s", "delta_s", "alpha_x", "alpha_z", "t", "sensitivity_to_j", "sensitivity_to_delta"]
-)
+grid_x, grid_z = np.meshgrid(resolution, resolution, indexing="ij")
+sensitivity_df = pd.DataFrame(sensitivity(n, k, j_s, delta_s, grid_x.ravel(), grid_z.ravel(), t))
 
 
 def plot_sensitivity(df, title: str, values: str):
@@ -130,6 +108,3 @@ with sensitivity_column_2:
 st.latex(
     r"""\omega_k :=  \sqrt{\left ( \alpha_z \frac{N-2k}{2} + \delta_S \right )^2 +  \left ( \alpha_x \frac{N-2k}{2} - J_S \right )^2}"""
 )
-
-# st.text("Full data")
-# sensitivity_df.T

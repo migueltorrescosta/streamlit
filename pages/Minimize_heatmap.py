@@ -45,11 +45,6 @@ minimizers = {
     "COBYQA": gen_minimizer_from_scipy(method="COBYQA"),
     "SLSQP": gen_minimizer_from_scipy(method="SLSQP"),
     "trust-constr": gen_minimizer_from_scipy(method="trust-constr"),
-    # "Newton-CG": gen_minimizer_from_scipy(method="Newton-CG"), # These require the Jacobian
-    # "dogleg": gen_minimizer_from_scipy(method="dogleg"),
-    # "trust-ncg": gen_minimizer_from_scipy(method="trust-ncg"),
-    # "trust-exact": gen_minimizer_from_scipy(method="trust-exact"),
-    # "trust-krylov": gen_minimizer_from_scipy(method="trust-krylov"),
 } # https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
 
 

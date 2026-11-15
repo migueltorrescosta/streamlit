@@ -11,9 +11,6 @@ from src.plotting import plot_array
 
 st.set_page_config(page_title="Numerical Quantum Time Evolution", page_icon="🦖️", layout="wide")
 
-st.cache_data.clear()
-st.cache_resource.clear()
-
 # START
 with st.sidebar:
 
@@ -34,7 +31,7 @@ with st.sidebar:
     with c3:
         trotterization_steps = st.number_input("$N_t$", min_value=5, value=500)
 
-    assert x_min < x_max, f"We need x_min < x_max"
+    assert x_min < x_max, "We need x_min < x_max"
 
     valid_x = np.linspace(x_min, x_max, number_of_spatial_points)
 
@@ -124,7 +121,7 @@ methodology_info = {
     """
 }
 
-tabs = st.tabs(methodology_info.keys())
+tabs = st.tabs(list(methodology_info))
 for tab, content in zip(tabs, methodology_info.keys()):
     with tab:
         st.markdown(methodology_info[content])
@@ -230,7 +227,6 @@ with c3:
         x="x"
     )
 
-# st.text("Orthogonality check via inner product table")
 orthonormality_error = np.sum(np.abs(
     np.real(np.conjugate(eigenvectors.T) @ eigenvectors) \
     - np.eye(number_of_energy_levels, number_of_energy_levels)
@@ -241,11 +237,7 @@ with c3:
     st.caption(
         f"\n $\\left \\| (\\sum_i \\ket{{\\lambda_i}})(\\sum_i \\bra{{\\lambda_i}}) - \\mathbb{{1}}) \\right \\|_{{sup}} = {orthonormality_error:g}$")
 
-# plot_array(np.real(np.conjugate(eigenvectors.T) @ eigenvectors))
-assert orthonormality_error < 1e-8, f"Your energy levels are not orthonormal"
-
-explained_psi_zero = np.sum([np.abs(el.component) ** 2 for el in energy_levels])
-explanation = pd.DataFrame({"component": el.component, "level": str(el.level)} for el in energy_levels)
+assert orthonormality_error < 1e-8, "Your energy levels are not orthonormal"
 
 with c1:
     st.subheader("Decomposition $\\ket{\\psi_0} = \\sum_i \\lambda_i \\ket{E_i}$")
@@ -263,14 +255,11 @@ with c1:
         f"""We known ${100 * np.sum([np.abs(el.component) ** 2 for el in energy_levels]):.20g} \\%$ of $\\ket{{\\psi_0}}$""")
 
 with c2:
-    st.caption(f"""
-        $\\begin{{array}}{{c}} 100\\ket{{\\psi_0}} \\\\ \\parallel \\\\
-        """ + "\\\\".join([
-        f"{100 * el.component:+.2f}\\ket{{ {el.level} }}"
-        for el
-        in energy_levels
-    ]) + "\\end{array}$"
-               )
+    st.caption(
+        r"$\begin{array}{c} 100\ket{\psi_0} \\ \parallel \\ "
+        + r"\\".join(f"{100 * el.component:+.2f}\\ket{{ {el.level} }}" for el in energy_levels)
+        + r"\end{array}$"
+    )
 
 st.header("Evolution", divider="red")
 
@@ -315,4 +304,4 @@ st.line_chart(
 )
 
 fig = px.line_3d(phi_time_df, x="x", y="Im", z="Re")
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig)
