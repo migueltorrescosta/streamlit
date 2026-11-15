@@ -2,7 +2,6 @@ from enum import Enum
 
 from matplotlib import pyplot as plt
 from src.plotting import plot_array
-from tqdm import tqdm
 import itertools
 import numpy as np
 import pandas as pd
@@ -46,7 +45,7 @@ match distribution:
         """)
 
 df_pdf = pd.DataFrame(
-    data=[(x, p, pdf(x,p)) for x,p in tqdm(itertools.product(valid_x, valid_theta), total=len(valid_x) * len(valid_theta))],
+    data=[(x, p, pdf(x,p)) for x,p in itertools.product(valid_x, valid_theta)],
     columns=["x", "theta", "pdf"]
 ).pivot(columns="x", index="theta", values="pdf")
 
@@ -65,13 +64,13 @@ with c1:
     st.latex("f_\\theta(x)")
     quick_and_dirty(np.array(df_pdf))
 with c2:
-    st.latex("\log_\\theta f(x)")
+    st.latex(r"\log_\theta f(x)")
     quick_and_dirty(np.log(np.array(df_pdf)))
 with c3:
-    st.latex("\\left ( \\frac{\partial}{\partial \\theta} \log_\\theta f(x) \\right )")
+    st.latex(r"\left ( \frac{\partial}{\partial \theta} \log_\theta f(x) \right )")
     quick_and_dirty(np.gradient(np.log(np.array(df_pdf)), axis=0))
 with c4:
-    st.latex("\\left ( \\frac{\partial}{\partial \\theta} \log f_\\theta(x) \\right )^2")
+    st.latex(r"\left ( \frac{\partial}{\partial \theta} \log f_\theta(x) \right )^2")
     quick_and_dirty(np.gradient(np.log(np.array(df_pdf)), axis=0)**2)
 
 # axis 0 is x, axis 1 is p
@@ -89,11 +88,11 @@ st.header("Cramer Rao", divider="orange")
 st.dataframe(fisher_information_df.T) # TODO: Understand why increasing the size of N impacts the number of Nones in this pd.DataFrame
 c1, c2 = st.columns(2)
 with c1:
-    st.latex("""
-        \\mathcal{I}(\\theta) \\coloneqq
-        \\mathbb{E}_X\\left [ \\left (
-            \\frac{\partial}{\partial \\theta} \log f_\\theta(x)
-            \\right )^2 | \\theta \\right ]
+    st.latex(r"""
+        \mathcal{I}(\theta) \coloneqq
+        \mathbb{E}_X\left [ \left (
+            \frac{\partial}{\partial \theta} \log f_\theta(x)
+            \right )^2 | \theta \right ]
     """)
     st.line_chart(
         data = fisher_information_df,
@@ -102,7 +101,7 @@ with c1:
     )
 
 with c2:
-    st.latex("\\mathrm{var}[\hat \\theta] \geq \\frac{1}{\mathcal{I}(\\theta)}")
+    st.latex(r"\mathrm{var}[\hat \theta] \geq \frac{1}{\mathcal{I}(\theta)}")
 
     st.line_chart(
         data = fisher_information_df,

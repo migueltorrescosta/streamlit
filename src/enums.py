@@ -4,9 +4,6 @@ from enum import Enum
 class WavePacket(str, Enum):
     Gaussian = "Gaussian"
     Step = "Step function"
-    # Airy = "Airy"
-    # Morse = "Morse"
-    # Solitary = "Solitary"
 
 
 class PotentialFunction(str, Enum):

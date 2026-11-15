@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from src.angular_momentum import generate_spin_matrices
 from src.plotting import plot_array
-from tqdm import tqdm
 from typing import Dict
 import functools
 import multiprocessing
@@ -9,8 +8,6 @@ import numpy as np
 import pandas as pd
 import scipy
 import streamlit as st
-
-tqdm.pandas()
 
 # LAYOUT
 st.set_page_config(page_title="Delta Optimization", page_icon="📈️", layout="wide")
@@ -220,7 +217,6 @@ df = pd.DataFrame(
 )
 
 # PLOTS
-# st.dataframe(data=df)
 st.line_chart(
     data=df,
     x="time",
@@ -250,14 +246,13 @@ iterable = (
 )
 
 
-cpus = multiprocessing.cpu_count()
-pool = multiprocessing.Pool(processes=cpus)
-df = pd.DataFrame(
-    data=pool.starmap(full_calculation, iterable),
-    columns=Settings.recorded_variables
-)
+with multiprocessing.Pool() as pool:
+    df = pd.DataFrame(
+        data=pool.starmap(full_calculation, iterable),
+        columns=Settings.recorded_variables
+    )
 
-df.drop("time", axis=1, inplace=True)
+df = df.drop("time", axis=1)
 
 polynomial_fit = np.polynomial.Polynomial.fit(
     np.array(df["expected_sigma_z"]),
@@ -314,7 +309,7 @@ def calculate_likelihood(
     return np.dot(inner_pdf, true_pdf)
 
 
-df["likelihood"] = df["<1|rho_system_t|1>"].progress_apply(calculate_likelihood)
+df["likelihood"] = df["<1|rho_system_t|1>"].apply(calculate_likelihood)
 df["likelihood"] = np.divide(df["likelihood"], df["likelihood"].mean())
 
 
@@ -384,13 +379,6 @@ with c1:
     )
 with c2:
     plot_array(st.session_state.experiment_history_df.T, midpoint=None)
-
-# 2D likelihood array, useful for debugging
-# fig = plot_array(
-#     np.array([calculate_probability_density_function(n=n_trials, p=p) for p in np.array(df["<1|rho_system_t|1>"])]),
-#     midpoint=max(pdf) / 2
-# )
-# st.plotly_chart(fig)
 
 # NEXT: Plot the variance of our likelihood as a function of the Number of trials n_trials
 
