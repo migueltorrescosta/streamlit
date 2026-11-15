@@ -3,7 +3,6 @@ from src.angular_momentum import generate_spin_matrices
 from src.plotting import plot_array
 from typing import Dict
 import functools
-import multiprocessing
 import numpy as np
 import pandas as pd
 import scipy
@@ -205,7 +204,7 @@ st.latex(f"""
 
 # DATAFRAME CREATION
 granularity = 500
-iterable = (RunOptions(t=time)  # For some weird reason, starmap needs a tuple, even if it has a single element
+iterable = (RunOptions(t=time)
     for time
     in np.round(np.linspace(0, 10, granularity + 1), 3)
 )
@@ -240,17 +239,16 @@ true_probability = float(np.array(df[df["time"] == time]["<1|rho_system_t|1>"])[
 
 # DATAFRAME CREATION
 iterable = (
-    (RunOptions(delta_s=inner_delta_s, t=time),) # starmap needs a tuple, even if it has a single element
+    RunOptions(delta_s=inner_delta_s, t=time)
     for inner_delta_s
     in np.round(np.linspace(guessed_delta_s - delta_s_var, guessed_delta_s + delta_s_var, 200 + 1), 3)
 )
 
 
-with multiprocessing.Pool() as pool:
-    df = pd.DataFrame(
-        data=pool.starmap(full_calculation, iterable),
-        columns=Settings.recorded_variables
-    )
+df = pd.DataFrame(
+    data=map(full_calculation, iterable),
+    columns=Settings.recorded_variables
+)
 
 df = df.drop("time", axis=1)
 

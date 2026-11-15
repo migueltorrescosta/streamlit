@@ -1,6 +1,4 @@
-import itertools
 import matplotlib.pyplot as plt
-import multiprocessing
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -89,16 +87,8 @@ with st.sidebar:
 
 # DATAFRAME CREATION
 resolution = [round(v, 3) for v in np.linspace(-5, 5, 500 + 1)]
-star_generator = [
-    (n, k, j_s, delta_s, alpha_x, alpha_z, t)
-    for (alpha_x, alpha_z)
-    in itertools.product(resolution, repeat=2)
-]
-with multiprocessing.Pool() as pool:  # Parallelizes the data generation
-    sensitivity_df = pd.DataFrame(
-        data=pool.starmap(sensitivity, star_generator),
-        columns=["n", "k", "j_s", "delta_s", "alpha_x", "alpha_z", "t", "sensitivity_to_j", "sensitivity_to_delta"]
-    )
+grid_x, grid_z = np.meshgrid(resolution, resolution, indexing="ij")
+sensitivity_df = pd.DataFrame(sensitivity(n, k, j_s, delta_s, grid_x.ravel(), grid_z.ravel(), t))
 
 
 def plot_sensitivity(df, title: str, values: str):
