@@ -255,14 +255,11 @@ with c1:
         f"""We known ${100 * np.sum([np.abs(el.component) ** 2 for el in energy_levels]):.20g} \\%$ of $\\ket{{\\psi_0}}$""")
 
 with c2:
-    st.caption(r"""
-        $\begin{array}{c} 100\ket{\psi_0} \\ \parallel \\
-        """ + "\\\\".join([
-        f"{100 * el.component:+.2f}\\ket{{ {el.level} }}"
-        for el
-        in energy_levels
-    ]) + "\\end{array}$"
-               )
+    st.caption(
+        r"$\begin{array}{c} 100\ket{\psi_0} \\ \parallel \\ "
+        + r"\\".join(f"{100 * el.component:+.2f}\\ket{{ {el.level} }}" for el in energy_levels)
+        + r"\end{array}$"
+    )
 
 st.header("Evolution", divider="red")
 
