@@ -77,13 +77,7 @@ with st.sidebar:
         k = st.number_input("$k$ ( initial state )", 0, n, 1)
 
     st.subheader("Interactions", divider="green")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        alpha_x = st.number_input("$\\alpha_x$", 0., 10., 1.)
-    with c2:
-        alpha_z = st.number_input("$\\alpha_z$", 0., 10., 1.)
-    with c3:
-        t = st.number_input("$t$", 0., 20., 3.)
+    t = st.number_input("$t$", 0., 20., 3.)
 
 # DATAFRAME CREATION
 resolution = [round(v, 3) for v in np.linspace(-5, 5, 500 + 1)]
